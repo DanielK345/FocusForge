@@ -1,0 +1,37 @@
+/focusforge
+│── /backend                    # Backend (Express + PostgreSQL)
+│   │── /models                 # Sequelize Models
+│   │   ├── index.js
+│   │   ├── User.js
+│   │   ├── Schedule.js
+│   │   ├── BlockedSite.js
+│   │── /routes                 # API Routes
+│   │   ├── authRoutes.js
+│   │   ├── scheduleRoutes.js
+│   │── /controllers            # Business Logic (Optional)
+│   │   ├── authController.js
+│   │   ├── scheduleController.js
+│   │── /middleware             # Middleware (Auth, Validation)
+│   │   ├── authMiddleware.js
+│   │── /config                 # Configuration (DB, Secrets)
+│   │   ├── database.js
+│   │── server.js               # Main Express Server
+│   │── .env                    # Environment Variables
+│   │── package.json            # Backend Dependencies
+│
+│── /frontend                   # Frontend (HTML, CSS, JavaScript)
+│   │── /css                    # Stylesheets
+│   │   ├── styles.css
+│   │── /js                     # Frontend Logic
+│   │   ├── auth.js
+│   │   ├── schedule.js
+│   │── index.html               # Login/Register Page
+│   │── dashboard.html           # Main App Interface
+│
+│── /database                   # Database Files (Optional)
+│   │── migrations/             # Sequelize Migrations
+│   │── seeders/                # Database Seed Data
+│   │── schema.sql              # Raw SQL Schema (if needed)
+│
+│── README.md                   # Project Documentation
+│── .gitignore                   # Git Ignore Files
