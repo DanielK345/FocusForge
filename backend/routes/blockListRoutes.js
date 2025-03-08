@@ -32,22 +32,69 @@ const router = express.Router();
 
 router.post("/blocklist/save", async (req, res) => {
   try {
+    console.log("Received blocklist data:", JSON.stringify(req.body, null, 2));
+    
     const { userID, blockedLists } = req.body;
-
-    if (!userID || !Array.isArray(blockedLists)) {
-      return res.status(400).json({ error: "Invalid request data" });
+    
+    // Kiểm tra dữ liệu đầu vào
+    if (!userID) {
+      return res.status(400).json({ error: "User ID is required" });
     }
+    
+    // Xử lý trường hợp blockedLists không phải là mảng
+    let listsToSave = [];
+    if (Array.isArray(blockedLists)) {
+      listsToSave = blockedLists;
+    } else if (req.body.lists && Array.isArray(req.body.lists)) {
+      // Nếu dữ liệu được gửi với tên là lists thay vì blockedLists
+      listsToSave = req.body.lists;
+    } else if (Array.isArray(req.body)) {
+      // Nếu dữ liệu được gửi trực tiếp là một mảng
+      listsToSave = req.body;
+    } else {
+      console.error("Invalid blocklist data format:", req.body);
+      return res.status(400).json({ error: "Invalid blocklist data format" });
+    }
+    
+    // Đảm bảo mỗi list có cấu trúc đúng
+    listsToSave = listsToSave.map(list => {
+      // Đảm bảo id là số
+      const id = typeof list.id === 'number' ? list.id : Number(list.id);
+      
+      // Đảm bảo name là string
+      const name = String(list.name || '');
+      
+      // Đảm bảo websites là mảng và có cấu trúc đúng
+      let websites = [];
+      if (Array.isArray(list.websites)) {
+        websites = list.websites.map(site => {
+          if (typeof site === 'string') {
+            return { url: site, icon: null };
+          } else if (site && typeof site === 'object') {
+            return {
+              url: String(site.url || ''),
+              icon: site.icon || null
+            };
+          }
+          return null;
+        }).filter(site => site && site.url); // Lọc bỏ các site không hợp lệ
+      }
+      
+      return { id, name, websites };
+    });
+    
+    console.log("Lists to save:", JSON.stringify(listsToSave, null, 2));
 
     // Find existing blocklist or create a new one
     let blocklist = await Blocklist.findOne({ userID });
 
     if (blocklist) {
       // Update existing document
-      blocklist.lists = blockedLists;
+      blocklist.lists = listsToSave;
       await blocklist.save();
     } else {
       // Create a new document
-      blocklist = new Blocklist({ userID, lists: blockedLists });
+      blocklist = new Blocklist({ userID, lists: listsToSave });
       await blocklist.save();
     }
 

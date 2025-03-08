@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
+const BlockList = require("./BlockList");
 
 const EventSchema = new mongoose.Schema({
-  id: { type: String, required: true }, // Event ID as a string
+  id: { type: Number, required: true }, // Event ID as a number
   title: { type: String, required: true },
   start: { type: Date, required: true },
   end: { type: Date, required: true },
@@ -11,13 +12,16 @@ const EventSchema = new mongoose.Schema({
   extendedProps: {
     description: { type: String, default: "" },
     colorIndex: { type: Number, default: 0 },
-  },
+    focusMode: { type: Boolean, default: false },
+    blocklistID: { type: Number, default: null }
+  }
 });
 
 const CalendarSchema = new mongoose.Schema({
   id: { type: Number, required: true }, // Calendar ID as a number
   name: { type: String, required: true },
   events: [EventSchema], // Array of event objects
+  active: { type: Boolean, default: false }
 });
 
 const UserCalendarSchema = new mongoose.Schema({
