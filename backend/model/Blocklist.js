@@ -24,12 +24,6 @@ const BlocklistSchema = new mongoose.Schema({
 
 // Middleware to validate and debug data before saving
 BlocklistSchema.pre('validate', function(next) {
-  console.log('Pre-validate Blocklist Data:', {
-    userID: this.userID,
-    listsLength: this.lists?.length,
-    fullData: JSON.stringify(this.toObject(), null, 2)
-  });
-
   // Check if lists is defined and is an array
   if (!this.lists || !Array.isArray(this.lists)) {
     console.error('Lists is not an array:', this.lists);
@@ -38,12 +32,6 @@ BlocklistSchema.pre('validate', function(next) {
 
   // Validate each list
   this.lists.forEach((list, index) => {
-    console.log(`Validating list ${index}:`, {
-      id: list.id,
-      name: list.name,
-      websitesLength: list.websites?.length
-    });
-
     // Check websites array
     if (!list.websites || !Array.isArray(list.websites)) {
       console.error(`Invalid websites array in list ${index}:`, list.websites);
@@ -56,20 +44,9 @@ BlocklistSchema.pre('validate', function(next) {
 
 // Middleware to process and debug websites before saving
 BlocklistSchema.pre('save', function(next) {
-  console.log('Pre-save Blocklist Processing');
-  
   try {
     this.lists.forEach((list, listIndex) => {
-      console.log(`Processing list ${listIndex}:`, {
-        beforeProcessing: list.websites
-      });
-
       list.websites = list.websites.map((website, websiteIndex) => {
-        console.log(`Processing website ${websiteIndex} in list ${listIndex}:`, {
-          original: website,
-          type: typeof website
-        });
-
         if (typeof website === 'string') {
           return { url: website, icon: null };
         }
@@ -85,10 +62,6 @@ BlocklistSchema.pre('save', function(next) {
           icon: website.icon || null
         };
       });
-
-      console.log(`List ${listIndex} after processing:`, {
-        afterProcessing: list.websites
-      });
     });
     next();
   } catch (error) {
@@ -99,15 +72,7 @@ BlocklistSchema.pre('save', function(next) {
 
 // Add post-save hook for debugging
 BlocklistSchema.post('save', function(doc) {
-  console.log('Blocklist saved successfully:', {
-    userID: doc.userID,
-    listsCount: doc.lists.length,
-    lists: doc.lists.map(list => ({
-      id: list.id,
-      name: list.name,
-      websitesCount: list.websites.length
-    }))
-  });
+  console.log('Blocklist saved successfully');
 });
 
 const Blocklist = mongoose.model("Blocklist", BlocklistSchema);

@@ -32,12 +32,6 @@ router.post("/events/save", async (req, res) => {
   try {
     const { userID, calendars } = req.body;
 
-    console.log("Received calendar data:", {
-      userID,
-      calendarsCount: calendars?.length,
-      calendars: JSON.stringify(calendars, null, 2)
-    });
-
     // 🔹 Validate request data
     if (!userID || !calendars) {
       return res.status(400).json({ error: "Missing required fields" });

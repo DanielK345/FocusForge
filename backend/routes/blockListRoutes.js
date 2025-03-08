@@ -32,8 +32,6 @@ const router = express.Router();
 
 router.post("/blocklist/save", async (req, res) => {
   try {
-    console.log("Received blocklist data:", JSON.stringify(req.body, null, 2));
-    
     const { userID, blockedLists } = req.body;
     
     // Kiểm tra dữ liệu đầu vào
@@ -82,8 +80,6 @@ router.post("/blocklist/save", async (req, res) => {
       
       return { id, name, websites };
     });
-    
-    console.log("Lists to save:", JSON.stringify(listsToSave, null, 2));
 
     // Find existing blocklist or create a new one
     let blocklist = await Blocklist.findOne({ userID });
