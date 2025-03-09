@@ -1,0 +1,401 @@
+# FOCUS FORGE BLOCKER - PROJECT REPORT
+
+## 1. Requirements and Design Document
+
+### Requirements
+
+#### Software Users
+- **Students**: Individuals who need to focus on studying and avoid distractions.
+- **Professionals/Workers**: Individuals who need to focus on work and manage their time effectively.
+- **Anyone seeking to improve productivity**: Users who want to limit time spent on distracting websites.
+
+#### Key Functionalities
+1. **Registration and Login**: Allows users to create and manage accounts.
+2. **Weekly Scheduling**: Create and manage study/work schedules.
+3. **Creating Blocked Website Lists**: Define websites to block during focus time.
+4. **Focus Mode**: Activate website blocking according to schedule.
+5. **Data Synchronization**: Sync schedules and website lists between the web application and Chrome extension.
+
+#### Detailed Description of Each Functionality
+
+1. **Registration and Login**
+   - Users access the website and select "Register"
+   - Fill in personal information (email, password)
+   - Confirm registration and proceed to the login page
+   - Log in with registered credentials
+   - After successful login, users are redirected to the main dashboard
+
+2. **Weekly Scheduling**
+   - Users access the calendar interface in the dashboard
+   - Select date and time to create focus events
+   - Name the event and choose a color for categorization
+   - Can create multiple calendars (e.g., study, work, personal)
+   - Save the schedule to apply website blocking mode
+
+3. **Creating Blocked Website Lists**
+   - Users access the "Blocked Website Lists" section
+   - Create new lists or edit existing ones
+   - Add URLs of websites to block to the list
+   - Assign lists to specific events in the calendar
+   - Save configuration to apply when focus mode is activated
+
+4. **Focus Mode**
+   - When scheduled time arrives, the Chrome extension automatically activates
+   - Websites in the block list become inaccessible
+   - Users see a notification page when attempting to access blocked websites
+   - Focus mode automatically turns off when the scheduled time ends
+
+5. **Data Synchronization**
+   - Calendar data and website lists are stored on the server
+   - The Chrome extension automatically syncs data every minute
+   - Users can update calendars or website lists, and changes will be applied immediately
+   - Ensures consistency between the web application and Chrome extension
+
+### Design
+
+#### a) Architectural Design
+
+**Architecture Model**: The project uses a modern JavaScript stack with MongoDB, Express.js, React.js, and Node.js (MERN) with a Client-Server model.
+
+**Main Components**:
+
+1. **Frontend Layer (Client)**
+   - **React.js**: Building dynamic and interactive user interfaces
+   - **React Hooks**: State management using useState and useEffect
+   - **FullCalendar**: Library for displaying and managing calendars
+   - **Fetch API**: Native browser API for making HTTP requests to the backend
+
+2. **Backend Layer (Server)**
+   - **Node.js**: JavaScript runtime environment
+   - **Express.js**: Web framework for building APIs
+   - **Mongoose**: ODM (Object Data Modeling) for interacting with MongoDB
+   - **JWT Authentication**: API authentication and security
+
+3. **Database Layer**
+   - **MongoDB**: NoSQL database storing user data, calendars, and website lists
+
+4. **Chrome Extension**
+   - **JavaScript**: Website blocking logic
+   - **Chrome API**: Interaction with Chrome browser
+   - **HTML/CSS**: Extension user interface
+   - **Fetch API**: For synchronizing data with the backend
+
+**Communication Protocol**:
+
+The project uses RESTful API for communication between layers:
+
+1. **API Endpoints**:
+
+   - **Authentication**
+     - `POST /api/auth/register`: Register new user
+     - `POST /api/auth/login`: Login and receive JWT token
+
+   - **User Data**
+     - `GET /api/user/data`: Retrieve user data (calendars and website lists)
+     - `POST /api/user/data`: Save user data
+
+   - **Calendars**
+     - `GET /api/calendars`: Get all user calendars
+     - `POST /api/calendars`: Create new calendar
+     - `PUT /api/calendars/:id`: Update calendar
+     - `DELETE /api/calendars/:id`: Delete calendar
+
+   - **Blocklists**
+     - `GET /api/blocklists`: Get all blocked website lists
+     - `POST /api/blocklists`: Create new list
+     - `PUT /api/blocklists/:id`: Update list
+     - `DELETE /api/blocklists/:id`: Delete list
+
+2. **Data Format**: All data is transmitted in JSON format.
+
+3. **Authentication**: Uses JWT (JSON Web Tokens) for user authentication. Token is sent in the Authorization header of each request.
+
+#### b) Database Design
+
+**Entity-Relationship (ER) Diagram**:
+
+1. **User Entity**
+   - `_id`: ObjectId (primary key)
+   - `email`: String (unique)
+   - `password`: String (encrypted)
+   - `createdAt`: Date
+   - `updatedAt`: Date
+
+2. **Calendar Entity**
+   - `_id`: ObjectId (primary key)
+   - `userID`: ObjectId (foreign key referencing User)
+   - `id`: Number (ID in application)
+   - `name`: String
+   - `active`: Boolean
+   - `events`: Array of Event Objects
+
+3. **Event Object** (Embedded in Calendar)
+   - `id`: Number
+   - `title`: String
+   - `start`: Date
+   - `end`: Date
+   - `allDay`: Boolean
+   - `extendedProps`: Object
+     - `colorIndex`: Number
+     - `blocklistID`: Number (reference to Blocklist)
+     - `focusMode`: Boolean
+
+4. **Blocklist Entity**
+   - `_id`: ObjectId (primary key)
+   - `userID`: ObjectId (foreign key referencing User)
+   - `lists`: Array of List Objects
+
+5. **List Object** (Embedded in Blocklist)
+   - `id`: Number
+   - `name`: String
+   - `websites`: Array of Website Objects
+
+6. **Website Object** (Embedded in List)
+   - `url`: String
+   - `icon`: String (optional)
+
+**Relationships**:
+- User 1:N Calendar (One user can have multiple calendars)
+- User 1:1 Blocklist (One user has one set of blocked website lists)
+- Calendar 1:N Event (One calendar contains multiple events)
+- Blocklist 1:N List (One blocklist contains multiple lists)
+- List 1:N Website (One list contains multiple websites)
+- Event N:1 List (Multiple events can reference the same website list)
+
+**MongoDB Schema**:
+
+```javascript
+// User Schema
+const UserSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  password: {
+    type: String,
+    required: true
+  }
+}, { timestamps: true });
+
+// Calendar Schema
+const CalendarSchema = new mongoose.Schema({
+  userID: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  id: {
+    type: Number,
+    required: true
+  },
+  name: {
+    type: String,
+    required: true
+  },
+  active: {
+    type: Boolean,
+    default: true
+  },
+  events: [{
+    id: {
+      type: Number,
+      required: true
+    },
+    title: {
+      type: String,
+      required: true
+    },
+    start: {
+      type: Date,
+      required: true
+    },
+    end: {
+      type: Date,
+      required: true
+    },
+    allDay: {
+      type: Boolean,
+      default: false
+    },
+    extendedProps: {
+      colorIndex: {
+        type: Number,
+        default: 0
+      },
+      blocklistID: {
+        type: Number,
+        default: null
+      },
+      focusMode: {
+        type: Boolean,
+        default: false
+      }
+    }
+  }]
+});
+
+// Blocklist Schema
+const BlocklistSchema = new mongoose.Schema({
+  userID: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  lists: [{
+    id: {
+      type: Number,
+      required: true
+    },
+    name: {
+      type: String,
+      required: true
+    },
+    websites: [{
+      url: {
+        type: String,
+        required: true
+      },
+      icon: {
+        type: String
+      }
+    }]
+  }]
+});
+```
+
+The database is designed to optimize query performance and minimize the number of queries needed to retrieve related data. Events are embedded in calendars, and websites are embedded in lists to minimize the number of queries required when loading user data.
+
+## 2. Application Setup Guide
+
+This section provides detailed instructions for setting up the Focus Forge Blocker application, including the backend server, frontend application, and Chrome extension.
+
+### Prerequisites
+
+Before setting up the application, ensure you have the following installed:
+
+- **Node.js** (v14.0.0 or higher)
+- **npm** (v6.0.0 or higher)
+- **MongoDB** (v4.0.0 or higher)
+- **Google Chrome** browser (for the extension)
+
+### Backend Setup
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/yourusername/focus-forge-blocker.git
+   cd focus-forge-blocker
+   ```
+
+2. **Navigate to the backend directory**:
+   ```bash
+   cd backend
+   ```
+
+3. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+4. **Set up environment variables**:
+   Create a `.env` file in the backend directory with the following content:
+   ```
+   PORT=5000
+   MONGODB_URI=mongodb://localhost:27017/focusforge
+   JWT_SECRET=your_jwt_secret_key
+   ```
+
+5. **Start the backend server**:
+   ```bash
+   npm start
+   ```
+   
+   For development with auto-reload:
+   ```bash
+   npm run dev
+   ```
+
+   The backend server will run on `http://localhost:5000`.
+
+### Frontend Setup
+
+1. **Navigate to the frontend directory**:
+   ```bash
+   cd ../frontend
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**:
+   Create a `.env` file in the frontend directory with the following content:
+   ```
+   REACT_APP_API_URL=http://localhost:5000/api
+   ```
+
+4. **Start the frontend application**:
+   ```bash
+   npm start
+   ```
+
+   The frontend application will run on `http://localhost:3000`.
+
+5. **Build for production** (when ready to deploy):
+   ```bash
+   npm run build
+   ```
+
+### Chrome Extension Setup
+
+1. **Navigate to the extension directory**:
+   ```bash
+   cd ../extension
+   ```
+
+2. **Install dependencies** (if any):
+   ```bash
+   npm install
+   ```
+
+3. **Build the extension** (if using a build process):
+   ```bash
+   npm run build
+   ```
+
+4. **Load the extension in Chrome**:
+   - Open Chrome and navigate to `chrome://extensions/`
+   - Enable "Developer mode" using the toggle in the top-right corner
+   - Click "Load unpacked" and select the `extension` directory (or the `dist` directory if you built the extension)
+   - The extension should now appear in your Chrome toolbar
+
+### Testing the Application
+
+1. **Register a new account**:
+   - Open `http://localhost:3000` in your browser
+   - Click "Register" and create a new account
+
+2. **Create schedules and blocklists**:
+   - After logging in, use the calendar interface to create focus events
+   - Create blocklists and assign them to events
+
+3. **Test the Chrome extension**:
+   - Ensure the extension is installed and you're logged in
+   - The extension should automatically block websites according to your schedule
+
+### Troubleshooting
+
+- **Backend connection issues**: Ensure MongoDB is running and the connection string in `.env` is correct
+- **Frontend API errors**: Check that the backend server is running and the API URL in the frontend `.env` file is correct
+- **Extension not blocking**: Verify that you're logged in both on the website and in the extension, and check the extension's console for errors
+
+### Deployment
+
+For production deployment:
+
+1. **Backend**: Deploy to a Node.js hosting service (e.g., Heroku, DigitalOcean)
+2. **Frontend**: Build the React app and deploy to a static hosting service (e.g., Netlify, Vercel)
+3. **Extension**: Package the extension and publish to the Chrome Web Store
+
+Remember to update all environment variables and API endpoints for production environments. 
