@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Focus Forge Blocker</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      width: 350px;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      padding: 16px;
+    }
+    
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .header h1 {
+      font-size: 18px;
+      margin: 0;
+      color: #333;
+    }
+    
+    .status {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+      padding: 8px;
+      border-radius: 4px;
+      background-color: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    
+    .status-active {
+      background-color: #4caf50;
+    }
+    
+    .status-inactive {
+      background-color: #f44336;
+    }
+    
+    .status-loading {
+      background-color: #2196f3;
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0% {
+        opacity: 0.6;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0.6;
+      }
+    }
+    
+    .status-text {
+      font-size: 14px;
+      color: #555;
+    }
+    
+    .section {
+      margin-bottom: 16px;
+      padding: 12px;
+      border-radius: 4px;
+      background-color: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .section h2 {
+      font-size: 16px;
+      margin: 0 0 8px 0;
+      color: #333;
+    }
+    
+    .event-item {
+      padding: 8px;
+      margin-bottom: 8px;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+      border-left: 4px solid #2196f3;
+    }
+    
+    .event-title {
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    
+    .event-time {
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .event-focus {
+      font-size: 12px;
+      color: #4caf50;
+      margin-top: 4px;
+    }
+    
+    .blocklist {
+      font-size: 12px;
+      color: #f44336;
+      margin-top: 2px;
+    }
+    
+    .website-list {
+      margin-top: 4px;
+      max-height: 60px;
+      overflow-y: auto;
+      padding: 4px;
+      background-color: #f5f5f5;
+      border-radius: 2px;
+    }
+    
+    .website-item {
+      font-size: 11px;
+      color: #666;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .website-icon {
+      width: 12px;
+      height: 12px;
+      margin-right: 4px;
+    }
+    
+    .button {
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: #2196f3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    
+    .button:hover {
+      background-color: #0b7dda;
+    }
+    
+    .button-secondary {
+      background-color: #f5f5f5;
+      color: #333;
+      border: 1px solid #ddd;
+    }
+    
+    .button-secondary:hover {
+      background-color: #e5e5e5;
+    }
+    
+    .button-success {
+      background-color: #4caf50;
+    }
+    
+    .button-success:hover {
+      background-color: #3e8e41;
+    }
+    
+    .login-form {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .form-group {
+      margin-bottom: 12px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+      color: #555;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .footer {
+      font-size: 12px;
+      color: #999;
+      text-align: center;
+      margin-top: 16px;
+      padding-top: 8px;
+      border-top: 1px solid #e0e0e0;
+    }
+    
+    .or-divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 16px 0;
+    }
+    
+    .or-divider::before,
+    .or-divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .or-divider span {
+      padding: 0 10px;
+      color: #999;
+      font-size: 12px;
+    }
+    
+    .error-message {
+      background-color: #ffebee;
+      color: #f44336;
+      padding: 8px 12px;
+      border-radius: 4px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      border-left: 4px solid #f44336;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Focus Forge Blocker</h1>
+      <button id="refreshButton" class="button button-secondary">Refresh</button>
+    </div>
+    
+    <div id="statusSection" class="status">
+      <div id="statusIndicator" class="status-indicator status-inactive"></div>
+      <div id="statusText" class="status-text">Not connected</div>
+    </div>
+    
+    <div id="errorMessage" class="error-message hidden">Error messages will be displayed here</div>
+    
+    <div id="loginSection" class="section">
+      <h2>Connect to Focus Forge</h2>
+      
+      <button id="autoConnectButton" class="button button-success">Auto Connect</button>
+      
+      <div class="or-divider">
+        <span>OR</span>
+      </div>
+      
+      <div class="login-form">
+        <div class="form-group">
+          <label for="userIdInput">User ID</label>
+          <input type="text" id="userIdInput" placeholder="Enter your User ID">
+        </div>
+        <div class="form-group">
+          <label for="tokenInput">Token</label>
+          <input type="password" id="tokenInput" placeholder="Enter your token">
+        </div>
+        <button id="loginButton" class="button">Manual Connect</button>
+      </div>
+    </div>
+    
+    <div id="dataSection" class="hidden">
+      <div class="section">
+        <h2>Active Calendar</h2>
+        <div id="calendarInfo">No calendar selected</div>
+      </div>
+      
+      <div class="section">
+        <h2>Current Events</h2>
+        <div id="eventsList">No events currently active</div>
+      </div>
+    </div>
+    
+    <div class="footer">
+      Last updated: <span id="lastUpdated">Never</span>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html> 

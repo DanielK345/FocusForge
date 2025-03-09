@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Website Blocked - Focus Forge</title>
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self'">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      color: #333;
+      text-align: center;
+    }
+    
+    .container {
+      max-width: 600px;
+      padding: 40px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .logo {
+      margin-bottom: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      color: #2196f3;
+    }
+    
+    h1 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #f44336;
+    }
+    
+    p {
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    
+    .event-info {
+      background-color: #f9f9f9;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid #2196f3;
+      text-align: left;
+    }
+    
+    .event-title {
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    
+    .event-time {
+      color: #666;
+      margin-bottom: 10px;
+    }
+    
+    .blocklist-name {
+      color: #f44336;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    .website-list {
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    
+    .website-item {
+      padding: 5px;
+      border-bottom: 1px solid #e0e0e0;
+      font-size: 14px;
+    }
+    
+    .website-item:last-child {
+      border-bottom: none;
+    }
+    
+    .timer {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 20px 0;
+      color: #2196f3;
+    }
+    
+    .button {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #2196f3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      text-decoration: none;
+      transition: background-color 0.3s;
+    }
+    
+    .button:hover {
+      background-color: #0b7dda;
+    }
+    
+    .footer {
+      margin-top: 40px;
+      font-size: 14px;
+      color: #999;
+    }
+    
+    .quote {
+      font-style: italic;
+      color: #666;
+      margin: 30px 0;
+      padding: 0 20px;
+      position: relative;
+    }
+    
+    .quote::before {
+      content: '"';
+      font-size: 60px;
+      position: absolute;
+      left: -10px;
+      top: -20px;
+      color: #e0e0e0;
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(33, 150, 243, 0.3);
+      border-radius: 50%;
+      border-top-color: #2196f3;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">Focus Forge</div>
+    
+    <h1>This website has been blocked</h1>
+    
+    <p>This website has been blocked according to your Focus Forge schedule. Please focus on your current task.</p>
+    
+    <div class="event-info">
+      <div class="event-title" id="eventTitle">Loading...</div>
+      <div class="event-time" id="eventTime">Loading...</div>
+      <div class="blocklist-name">Block list: <span id="blocklistName">Loading...</span></div>
+      <div id="websiteListContainer"></div>
+    </div>
+    
+    <div class="quote">
+      "Focus is not about saying yes to the things that matter, but saying no to hundreds of good ideas."
+    </div>
+    
+    <p>Current event will end in:</p>
+    <div class="timer" id="timer">00:00:00</div>
+    
+    <a href="javascript:history.back()" class="button">Go back</a>
+    
+    <div class="footer">
+      Blocked by Focus Forge Blocker
+    </div>
+  </div>
+  
+  <script src="blocked.js"></script>
+</body>
+</html> 
