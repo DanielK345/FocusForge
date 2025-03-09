@@ -4,13 +4,17 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "heroku-postbuild": "cd frontend && npm install && npm run build && cd ../backend && npm install"
   },
   "private": true,
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "Focus Forge Blocker Application",
+  "engines": {
+    "node": "20.x"
+  },
   "dependencies": {
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
