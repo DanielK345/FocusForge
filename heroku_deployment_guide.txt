@@ -1,0 +1,253 @@
+# Step-by-Step Guide: Deploying Focus Forge Blocker Backend to Heroku
+
+This guide provides detailed instructions for deploying the Focus Forge Blocker backend to Heroku.
+
+## Prerequisites
+
+1. **Heroku Account**: Sign up at [heroku.com](https://heroku.com) if you don't have an account
+2. **Heroku CLI**: Install from [devcenter.heroku.com/articles/heroku-cli](https://devcenter.heroku.com/articles/heroku-cli)
+3. **Git**: Ensure Git is installed on your system
+4. **MongoDB Atlas Account**: For database hosting (sign up at [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas))
+
+## Step 1: Prepare Your Backend Code
+
+1. **Ensure your backend code is ready for production**:
+   ```bash
+   cd /path/to/focus-forge/backend
+   ```
+
+2. **Verify your package.json has the correct start script**:
+   ```json
+   "scripts": {
+     "start": "node index.js",
+     "dev": "nodemon index.js"
+   }
+   ```
+
+3. **Add a Procfile in the backend directory**:
+   ```bash
+   echo "web: node index.js" > Procfile
+   ```
+
+4. **Ensure your server listens on the correct port**:
+   Open `index.js` and verify it contains:
+   ```javascript
+   const PORT = process.env.PORT || 5000;
+   app.listen(PORT, () => console.log(`Server running on port: ${PORT}`));
+   ```
+
+5. **Configure environment variables**:
+   Create a `.env.example` file (without sensitive data) to document required environment variables:
+   ```
+   PORT=5000
+   MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<dbname>
+   JWT_SECRET=your_jwt_secret
+   ```
+
+## Step 2: Set Up MongoDB Atlas
+
+1. **Create a new cluster** in MongoDB Atlas (or use an existing one)
+
+2. **Create a database user**:
+   - Go to Database Access → Add New Database User
+   - Create a username and password (save these securely)
+   - Set appropriate permissions (readWrite to your database)
+
+3. **Configure network access**:
+   - Go to Network Access → Add IP Address
+   - Add `0.0.0.0/0` to allow access from anywhere (for Heroku)
+
+4. **Get your connection string**:
+   - Go to Clusters → Connect → Connect your application
+   - Copy the connection string (it will look like: `mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<dbname>`)
+   - Replace `<username>`, `<password>`, and `<dbname>` with your actual values
+
+## Step 3: Create a Heroku App
+
+1. **Log in to Heroku CLI**:
+   ```bash
+   heroku login
+   ```
+
+2. **Create a new Heroku app**:
+   ```bash
+   heroku create focus-forge-backend
+   ```
+   Note: If the name is taken, choose a different one or let Heroku assign a random name
+
+3. **Verify the app was created**:
+   ```bash
+   heroku apps
+   ```
+
+## Step 4: Configure Heroku Environment Variables
+
+1. **Set environment variables on Heroku**:
+   ```bash
+   heroku config:set MONGODB_URI="your_mongodb_connection_string" --app focus-forge-backend
+   heroku config:set JWT_SECRET="your_secure_jwt_secret" --app focus-forge-backend
+   heroku config:set NODE_ENV="production" --app focus-forge-backend
+   ```
+
+2. **Verify environment variables**:
+   ```bash
+   heroku config --app focus-forge-backend
+   ```
+
+## Step 5: Deploy to Heroku
+
+### Option 1: Deploy from a Git Repository
+
+1. **Initialize Git repository** (if not already done):
+   ```bash
+   cd /path/to/focus-forge
+   git init
+   git add .
+   git commit -m "Initial commit for Heroku deployment"
+   ```
+
+2. **Add Heroku remote**:
+   ```bash
+   heroku git:remote -a focus-forge-backend
+   ```
+
+3. **Push to Heroku**:
+   If your backend is in the root directory:
+   ```bash
+   git push heroku master
+   ```
+   
+   If your backend is in a subdirectory:
+   ```bash
+   git subtree push --prefix backend heroku master
+   ```
+
+### Option 2: Deploy Using Heroku CLI (Alternative Method)
+
+1. **Navigate to your backend directory**:
+   ```bash
+   cd /path/to/focus-forge/backend
+   ```
+
+2. **Create a new Git repository for just the backend**:
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial backend commit"
+   ```
+
+3. **Add Heroku remote and push**:
+   ```bash
+   heroku git:remote -a focus-forge-backend
+   git push heroku master
+   ```
+
+## Step 6: Verify Deployment
+
+1. **Check deployment logs**:
+   ```bash
+   heroku logs --tail --app focus-forge-backend
+   ```
+
+2. **Open the app in browser**:
+   ```bash
+   heroku open --app focus-forge-backend
+   ```
+   
+   You should see your API running or a welcome message if you've set one up.
+
+3. **Test an API endpoint**:
+   ```bash
+   curl https://focus-forge-backend.herokuapp.com/api/health
+   ```
+   Replace with an actual endpoint from your API.
+
+## Step 7: Configure Auto-Scaling and Resources (Optional)
+
+1. **Scale your dynos** (if needed for higher traffic):
+   ```bash
+   heroku ps:scale web=1:standard-1x --app focus-forge-backend
+   ```
+   Note: This will incur charges. The free tier uses `web=1:free`.
+
+2. **Add database add-ons** (if not using MongoDB Atlas):
+   ```bash
+   heroku addons:create mongolab:sandbox --app focus-forge-backend
+   ```
+
+## Step 8: Set Up Continuous Deployment (Optional)
+
+1. **Connect your GitHub repository to Heroku**:
+   - Go to the Heroku Dashboard → focus-forge-backend → Deploy
+   - Connect to GitHub and select your repository
+   - Enable automatic deploys from your main branch
+
+2. **Configure build settings**:
+   - Enable "Wait for CI to pass before deploy" if you have CI set up
+
+## Step 9: Update Frontend Configuration
+
+1. **Update your frontend API URL** to point to your Heroku backend:
+   ```javascript
+   // In frontend/src/components/Dashboard/utils/apiUtils.js
+   const API_URL = process.env.NODE_ENV === 'production' 
+     ? 'https://focus-forge-backend.herokuapp.com/api'
+     : 'http://localhost:5000/api';
+   ```
+
+2. **Update CORS settings** in your backend to allow requests from your frontend:
+   ```javascript
+   // In backend/index.js
+   app.use(cors({
+     origin: process.env.NODE_ENV === 'production'
+       ? ['https://your-frontend-domain.com', 'chrome-extension://your-extension-id']
+       : 'http://localhost:3000'
+   }));
+   ```
+
+## Step 10: Monitor and Maintain
+
+1. **Set up monitoring**:
+   ```bash
+   heroku addons:create papertrail:choklad --app focus-forge-backend
+   ```
+
+2. **Set up alerts** for application errors:
+   - Go to Heroku Dashboard → focus-forge-backend → Metrics
+   - Set up alerts for application errors or high response times
+
+3. **Regular maintenance**:
+   - Check logs periodically
+   - Update dependencies
+   - Monitor performance metrics
+
+## Troubleshooting Common Issues
+
+1. **Application crashes on startup**:
+   - Check logs: `heroku logs --tail --app focus-forge-backend`
+   - Verify environment variables are set correctly
+   - Ensure MongoDB connection string is correct
+
+2. **MongoDB connection issues**:
+   - Verify network access settings in MongoDB Atlas
+   - Check if the connection string is correctly formatted
+   - Ensure the database user has correct permissions
+
+3. **"Application Error" in browser**:
+   - Check if your app is actually running: `heroku ps --app focus-forge-backend`
+   - Review logs for errors: `heroku logs --app focus-forge-backend`
+   - Ensure your app is listening on the correct port
+
+4. **Deployment fails**:
+   - Check for build errors in the logs
+   - Verify your package.json is correctly configured
+   - Ensure all dependencies are listed in package.json
+
+## Additional Resources
+
+- [Heroku Node.js Support](https://devcenter.heroku.com/articles/nodejs-support)
+- [Heroku Deployment Documentation](https://devcenter.heroku.com/categories/deployment)
+- [MongoDB Atlas Documentation](https://docs.atlas.mongodb.com/)
+- [Managing Environment Variables in Heroku](https://devcenter.heroku.com/articles/config-vars)
+
+Remember to never commit sensitive information like API keys, database credentials, or JWT secrets to your repository. Always use environment variables for these values. 

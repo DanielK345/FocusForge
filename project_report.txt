@@ -162,109 +162,6 @@ The project uses RESTful API for communication between layers:
 - List 1:N Website (One list contains multiple websites)
 - Event N:1 List (Multiple events can reference the same website list)
 
-**MongoDB Schema**:
-
-```javascript
-// User Schema
-const UserSchema = new mongoose.Schema({
-  email: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  password: {
-    type: String,
-    required: true
-  }
-}, { timestamps: true });
-
-// Calendar Schema
-const CalendarSchema = new mongoose.Schema({
-  userID: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  id: {
-    type: Number,
-    required: true
-  },
-  name: {
-    type: String,
-    required: true
-  },
-  active: {
-    type: Boolean,
-    default: true
-  },
-  events: [{
-    id: {
-      type: Number,
-      required: true
-    },
-    title: {
-      type: String,
-      required: true
-    },
-    start: {
-      type: Date,
-      required: true
-    },
-    end: {
-      type: Date,
-      required: true
-    },
-    allDay: {
-      type: Boolean,
-      default: false
-    },
-    extendedProps: {
-      colorIndex: {
-        type: Number,
-        default: 0
-      },
-      blocklistID: {
-        type: Number,
-        default: null
-      },
-      focusMode: {
-        type: Boolean,
-        default: false
-      }
-    }
-  }]
-});
-
-// Blocklist Schema
-const BlocklistSchema = new mongoose.Schema({
-  userID: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  lists: [{
-    id: {
-      type: Number,
-      required: true
-    },
-    name: {
-      type: String,
-      required: true
-    },
-    websites: [{
-      url: {
-        type: String,
-        required: true
-      },
-      icon: {
-        type: String
-      }
-    }]
-  }]
-});
-```
-
-The database is designed to optimize query performance and minimize the number of queries needed to retrieve related data. Events are embedded in calendars, and websites are embedded in lists to minimize the number of queries required when loading user data.
 
 ## 2. Application Setup Guide
 
@@ -283,7 +180,7 @@ Before setting up the application, ensure you have the following installed:
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/yourusername/focus-forge-blocker.git
+   git clone https://github.com/DanielK345/FocusForge.git
    cd focus-forge-blocker
    ```
 

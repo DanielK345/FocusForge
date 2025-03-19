@@ -1,5 +1,5 @@
 const express = require("express");
-const Blocklist = require("../model/BlockList");
+const Blocklist = require("../model/Blocklist");
 const router = express.Router();
 
 // ✅Add a New Blocklist

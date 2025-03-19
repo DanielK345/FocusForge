@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../config";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
@@ -8,7 +9,7 @@ const Signup = () => {
 
   const handleSignup = async (e) => {
     e.preventDefault();
-    const response = await fetch("http://localhost:5000/api/auth/register", {
+    const response = await fetch(`${API.baseURL}${API.endpoints.auth.register}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),

@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const BlockList = require("./BlockList");
 
 const EventSchema = new mongoose.Schema({
   id: { type: Number, required: true }, // Event ID as a number
@@ -13,7 +12,7 @@ const EventSchema = new mongoose.Schema({
     description: { type: String, default: "" },
     colorIndex: { type: Number, default: 0 },
     focusMode: { type: Boolean, default: false },
-    blocklistID: { type: Number, default: null }
+    blocklistID: { type: Number, default: null } 
   }
 });
 

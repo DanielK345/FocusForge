@@ -1,10 +1,12 @@
+import API from '../../../config';
+
 export async function fetchUserData(userID, token){
     try {
-      const eventsResponse = await fetch(`http://localhost:5000/api/dashboard/events/get?userID=${userID}`, {
+      const eventsResponse = await fetch(`${API.baseURL}${API.endpoints.dashboard.events.fetch}/get?userID=${userID}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const blocklistResponse = await fetch(`http://localhost:5000/api/dashboard/blocklist/get?userID=${userID}`, {
+      const blocklistResponse = await fetch(`${API.baseURL}${API.endpoints.dashboard.blocklist.fetch}/get?userID=${userID}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -170,7 +172,7 @@ export async function saveUserData(userID, calendars, blockedWebsites) {
     try {
         // Send both requests concurrently
         const [eventsResponse, blocklistResponse] = await Promise.all([
-            fetch("http://localhost:5000/api/dashboard/events/save", {
+            fetch(`${API.baseURL}${API.endpoints.dashboard.events.save}`, {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json",
@@ -178,7 +180,7 @@ export async function saveUserData(userID, calendars, blockedWebsites) {
                 },
                 body: JSON.stringify(dataToSave),
             }),
-            fetch("http://localhost:5000/api/dashboard/blocklist/save", {
+            fetch(`${API.baseURL}${API.endpoints.dashboard.blocklist.save}`, {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json",

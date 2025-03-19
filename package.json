@@ -1,14 +1,13 @@
 {
-  "name": "focus-forge",
+  "name": "focus-forge-root",
   "version": "1.0.0",
-  "description": "Focus Forge Blocker Application",
+  "description": "Focus Forge Blocker Application - Root Package",
   "engines": {
-    "node": "22.x",
-    "npm": "10.x"
+    "node": "22.12.0",
+    "npm": "10.9.0"
   },
   "scripts": {
-    "start": "cd backend && npm start",
-    "heroku-postbuild": "cd frontend && npm install && npm run build && cd ../backend && npm install"
+    "start": "cd backend && npm start"
   },
   "dependencies": {
     "autoprefixer": "^10.4.14",
