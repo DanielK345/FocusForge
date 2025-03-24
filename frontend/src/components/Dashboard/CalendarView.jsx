@@ -12,21 +12,9 @@ const CalendarView = ({
                           handleDateSelect,
                           exportEvents,
                           saveEvents,
-                          setFocusMode,
                           blockedWebsiteLists,
                           handleLogout
                       }) => {
-    const handleFocusModeToggle = (eventId, currentFocusMode) => {
-        setFocusMode(eventId, !currentFocusMode);
-    };
-
-    const getBlockedWebsites = (event) => {
-        const blocklistID = event.extendedProps.blocklistID;
-        if (!blocklistID) return [];
-        
-        const selectedList = blockedWebsiteLists.find(list => list.id === blocklistID);
-        return selectedList?.websites || [];
-    };
 
     return (
         <div className="flex-1 p-2">

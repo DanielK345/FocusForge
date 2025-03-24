@@ -10,7 +10,6 @@ import { fetchUserData, saveUserData } from './utils/apiUtils';
 import { validateUrl, getFavicon } from './utils/urlUtils';
 
 const WeeklyScheduler = () => {
-  const [events, setEvents] = useState([]);
   const [showModal, setShowModal] = useState(false); //event modal
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [calendarEvents, setCalendarEvents] = useState([]);
@@ -365,21 +364,20 @@ const WeeklyScheduler = () => {
     }
   };
 
-  const setFocusMode = (eventId, isFocused) => {
-    // Cập nhật calendarEvents
+  // Toggle event focus mode
+  const toggleEventFocusMode = (eventId) => {
     setCalendarEvents(prevEvents => {
       const updatedEvents = prevEvents.map(event => {
         if (event.id === eventId) {
-          // Lấy mô tả từ cả hai nguồn có thể
           const description = event.extendedProps?.description || event.description || '';
           
           return {
             ...event,
-            description: description, // Giữ nguyên mô tả ở cấp cao nhất
+            description: description,
             extendedProps: {
               ...event.extendedProps,
-              description: description, // Giữ nguyên mô tả trong extendedProps
-              focusMode: isFocused
+              description: description,
+              focusMode: !event.extendedProps?.focusMode
             }
           };
         }
@@ -433,22 +431,6 @@ const WeeklyScheduler = () => {
     }
   };
 
-  // Cập nhật calendarEvents và theo dõi lịch sử
-  const updateCalendarEvents = (newEvents) => {
-    // Cập nhật calendarEvents
-    setCalendarEvents(newEvents);
-    
-    // Cập nhật calendarEventsMap cho calendar hiện tại
-    setCalendarEventsMap(prev => {
-      const updatedMap = { ...prev };
-      updatedMap[activeCalendarId] = newEvents;
-      return updatedMap;
-    });
-    
-    // Thêm vào lịch sử
-    addToHistory(newEvents);
-  };
-
   // Export events as JSON
   const exportEvents = () => {
     const dataToExport = {
@@ -474,7 +456,6 @@ const WeeklyScheduler = () => {
   // Save events to server
   const saveEvents = async () => {
     const userID = localStorage.getItem('userID');
-    const token = localStorage.getItem('token');
 
     if (!userID) {
         console.error("No user ID found");
@@ -496,15 +477,6 @@ const WeeklyScheduler = () => {
                     // Lấy mô tả từ cả hai nguồn có thể
                     const description = event.extendedProps?.description || event.description || '';
                     
-                    // Đảm bảo mô tả được lưu ở cả hai vị trí
-                    const eventWithDescription = {
-                        ...event,
-                        description: description,
-                        extendedProps: {
-                            ...event.extendedProps,
-                            description: description
-                        }
-                    };
                     
                     return {
                         id: Number(event.id),
@@ -790,7 +762,6 @@ const WeeklyScheduler = () => {
           handleDateSelect={handleDateSelect}
           exportEvents={exportEvents}
           saveEvents={saveEvents}
-          setFocusMode={setFocusMode}
           blockedWebsiteLists={blockedWebsiteLists}
           handleLogout={handleLogout}
         />
@@ -808,6 +779,7 @@ const WeeklyScheduler = () => {
             deleteEvent={deleteEvent}
             setShowModal={setShowModal}
             blockedWebsiteLists={blockedWebsiteLists}
+            toggleEventFocusMode={toggleEventFocusMode}
           />
         </>
       )}

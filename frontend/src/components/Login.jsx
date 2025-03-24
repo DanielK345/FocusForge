@@ -9,7 +9,9 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const response = await fetch(`${API.baseURL}${API.endpoints.auth.login}`, {
+    const apiurl = API.baseURL + API.endpoints.auth.login;
+    console.log(apiurl);
+    const response = await fetch(apiurl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),

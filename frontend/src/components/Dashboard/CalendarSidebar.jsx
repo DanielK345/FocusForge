@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pencil, Trash, Plus } from 'lucide-react';
+import { Trash, Plus } from 'lucide-react';
 import { getFavicon } from './utils/urlUtils';
 import CalendarListItem from './CalendarListItem';
 

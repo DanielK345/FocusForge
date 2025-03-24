@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { getFavicon } from './utils/urlUtils';
 
 const EventModal = ({

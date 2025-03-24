@@ -10,13 +10,23 @@ const calendarRoutes = require('./routes/calendarRoutes');
 const blockListRoutes = require('./routes/blockListRoutes');
 
 const app = express();
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production'
-    ? ['https://focusforge.netlify.app', 'chrome-extension://*']
-    : '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// Configure CORS to allow requests from 'http://localhost:3000'
+const corsOptions = {
+  origin: ['https://focus-forge-welcome.netlify.app', 'chrome-extension://*'], // Specify the allowed origin(s) here
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Optional: Specify allowed HTTP methods
+  credentials: true, // Optional: Set to true if you need to send cookies
+};
+
+app.use(cors(corsOptions)); // Apply CORS configuration to all routes
+
+
+// app.use(cors({
+//   origin: process.env.NODE_ENV === 'production'
+//     ? ['https://focusforge.netlify.app', 'chrome-extension://*']
+//     : ['http://localhost:3000', 'chrome-extension://*'],
+//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//   allowedHeaders: ['Content-Type', 'Authorization']
+// }));
 app.use(express.json());
 
 
@@ -24,8 +34,8 @@ app.use(express.json());
 connectDB();
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/dashboard', [calendarRoutes, blockListRoutes]);
+app.use('/auth', authRoutes);
+app.use('/dashboard', [calendarRoutes, blockListRoutes]);
 
 // Add this route handler for the root path
 app.get('/', (req, res) => {
@@ -33,21 +43,20 @@ app.get('/', (req, res) => {
     message: 'Focus Forge Backend API is running',
     status: 'OK',
     endpoints: {
-      auth: '/api/auth',
-      calendar: '/api/calendar',
-      blocklist: '/api/blocklist'
+      auth: '/auth',
+      calendar: '/dashboard',
     }
   });
 });
 
 // Serve static assets in production
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../frontend/build')));
+// if (process.env.NODE_ENV === 'production') {
+//     app.use(express.static(path.join(__dirname, '../frontend/build')));
     
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
-    });
-  }
+//     app.get('*', (req, res) => {
+//       res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+//     });
+//   }
 
 // Error handling middleware (add this at the end, before app.listen)
 app.use((err, req, res, next) => {
