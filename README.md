@@ -165,4 +165,4 @@ After deploying the backend to Heroku, update the frontend configuration to use 
 
 ## Contact
 
-For any issues or questions, please contact the development team at support@focusforge.com. 
+For any issues or questions, please contact the owner of this repo: khacduy2004@gmail.com. 
