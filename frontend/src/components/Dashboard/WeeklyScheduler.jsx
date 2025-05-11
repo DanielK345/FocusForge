@@ -5,7 +5,7 @@ import CalendarView from './CalendarView';
 import EventModal from './EventModal';
 import AddListModal from './AddListModal';
 import BlockedWebsiteModal from './BlockedWebsiteModal';
-import { eventColors, getRandomEventColor } from './utils/colorUtils';
+import colorUtils from './utils/colorUtils';
 import { fetchUserData, saveUserData } from './utils/apiUtils';
 import { validateUrl, getFavicon } from './utils/urlUtils';
 
@@ -26,6 +26,8 @@ const WeeklyScheduler = () => {
   const [newWebsite, setNewWebsite] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // State for calendar events
   const [calendarEventsMap, setCalendarEventsMap] = useState({});
@@ -76,7 +78,8 @@ const WeeklyScheduler = () => {
 
         return updatedCalendars;
     });
-};
+    setHasUnsavedChanges(true);
+  };
 
   // Activate calendar
   const handleCalendarActivate = (calendarId) => {
@@ -113,6 +116,7 @@ const WeeklyScheduler = () => {
     setCalendars(prev => prev.map(cal =>
       cal.id === calendarId ? { ...cal, name: newName } : cal
     ));
+    setHasUnsavedChanges(true);
   };
 
   // Delete calendar
@@ -150,6 +154,7 @@ const WeeklyScheduler = () => {
         return updatedMap;
       });
     }
+    setHasUnsavedChanges(true);
   };
 
   const [calendars, setCalendars] = useState([]);
@@ -172,91 +177,48 @@ const WeeklyScheduler = () => {
       if (e.ctrlKey && e.key === 'z' && currentHistoryIndex > 0) {
         setCurrentHistoryIndex(prev => prev - 1);
         setCalendarEvents(history[currentHistoryIndex - 1]);
+        setHasUnsavedChanges(true);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [history, currentHistoryIndex]);
 
+  // Thêm mã để cập nhật thông tin phiên khi tải dữ liệu
   useEffect(() => {
     const loadData = async () => {
-        setIsLoading(true);
-        setError(null);
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const token = localStorage.getItem('token');
+        const userID = localStorage.getItem('userID');
         
-        try {
-            const token = localStorage.getItem('token');
-            const userID = localStorage.getItem('userID');
-
-            if (!userID) {
-                console.error("No user ID found. Redirecting to home...");
-                navigate("/");
-                return;
-            }
+        if (!userID) {
+          console.error("No user ID found. Redirecting to home...");
+          navigate("/");
+          return;
+        }
+        
+        const { calendarsData, blocklistData } = await fetchUserData(userID, token);
+        console.log("Calendars Data:", calendarsData);
+        console.log("Blocklist Data:", blocklistData);
+        
+        // Xử lý dữ liệu calendar
+        if (calendarsData && Array.isArray(calendarsData.calendars) && calendarsData.calendars.length > 0) {
+            // Có dữ liệu calendar
+            setCalendars(calendarsData.calendars);
+            setActiveCalendarId(calendarsData.calendars[0].id);
             
-            const { calendarsData, blocklistData } = await fetchUserData(userID, token);
-            console.log("Calendars Data:", calendarsData);
-            console.log("Blocklist Data:", blocklistData);
-            
-            // Xử lý dữ liệu calendar
-            if (calendarsData && Array.isArray(calendarsData.calendars) && calendarsData.calendars.length > 0) {
-                // Có dữ liệu calendar
-                setCalendars(calendarsData.calendars);
-                setActiveCalendarId(calendarsData.calendars[0].id);
-                
-                // Tạo map events cho từng calendar
-                const eventsMap = {};
-                calendarsData.calendars.forEach(calendar => {
-                    eventsMap[calendar.id] = calendar.events || [];
-                });
-                setCalendarEventsMap(eventsMap);
-                setCalendarEvents(eventsMap[calendarsData.calendars[0].id] || []);
-            } else {
-                // Không có dữ liệu calendar, tạo calendar mặc định
-                const defaultCalendar = {
-                    id: 1,
-                    name: 'Default Calendar',
-                    events: [],
-                    active: true
-                };
-                setCalendars([defaultCalendar]);
-                setActiveCalendarId(defaultCalendar.id);
-                setCalendarEvents([]);
-                setCalendarEventsMap({ [defaultCalendar.id]: [] });
-            }
-
-            // Xử lý dữ liệu blocklist
-            console.log("Processing blocklist data:", blocklistData);
-            if (blocklistData && blocklistData.lists && Array.isArray(blocklistData.lists) && blocklistData.lists.length > 0) {
-                // Đảm bảo mỗi list có id dạng số và websites là mảng
-                const processedLists = blocklistData.lists.map(list => ({
-                    ...list,
-                    id: Number(list.id),
-                    websites: Array.isArray(list.websites) ? list.websites.map(site => {
-                        if (typeof site === 'string') {
-                            return { url: site, icon: null };
-                        }
-                        return {
-                            url: site.url,
-                            icon: site.icon || null
-                        };
-                    }) : []
-                }));
-                
-                console.log("Setting blockedWebsiteLists:", processedLists);
-                setBlockedWebsiteLists(processedLists);
-            } else {
-                // Tạo một list mặc định nếu không có dữ liệu
-                console.log("No list data, creating default list");
-                setBlockedWebsiteLists([{
-                    id: 1,
-                    name: 'Default List',
-                    websites: []
-                }]);
-            }
-        } catch (err) {
-            console.error("Error loading data:", err);
-            setError("Failed to load your calendar data. Please try refreshing the page.");
-            // Initialize with empty data on error
+            // Tạo map events cho từng calendar
+            const eventsMap = {};
+            calendarsData.calendars.forEach(calendar => {
+                eventsMap[calendar.id] = calendar.events || [];
+            });
+            setCalendarEventsMap(eventsMap);
+            setCalendarEvents(eventsMap[calendarsData.calendars[0].id] || []);
+        } else {
+            // Không có dữ liệu calendar, tạo calendar mặc định
             const defaultCalendar = {
                 id: 1,
                 name: 'Default Calendar',
@@ -266,14 +228,59 @@ const WeeklyScheduler = () => {
             setCalendars([defaultCalendar]);
             setActiveCalendarId(defaultCalendar.id);
             setCalendarEvents([]);
+            setCalendarEventsMap({ [defaultCalendar.id]: [] });
+        }
+
+        // Xử lý dữ liệu blocklist
+        console.log("Processing blocklist data:", blocklistData);
+        if (blocklistData && blocklistData.lists && Array.isArray(blocklistData.lists) && blocklistData.lists.length > 0) {
+            // Đảm bảo mỗi list có id dạng số và websites là mảng
+            const processedLists = blocklistData.lists.map(list => ({
+                ...list,
+                id: Number(list.id),
+                websites: Array.isArray(list.websites) ? list.websites.map(site => {
+                    if (typeof site === 'string') {
+                        return { url: site, icon: null };
+                    }
+                    return {
+                        url: site.url,
+                        icon: site.icon || null
+                    };
+                }) : []
+            }));
+            
+            console.log("Setting blockedWebsiteLists:", processedLists);
+            setBlockedWebsiteLists(processedLists);
+        } else {
+            // Tạo một list mặc định nếu không có dữ liệu
+            console.log("No list data, creating default list");
             setBlockedWebsiteLists([{
                 id: 1,
                 name: 'Default List',
                 websites: []
             }]);
-        } finally {
-            setIsLoading(false);
         }
+      } catch (err) {
+        console.error("Error loading data:", err);
+        setError("Failed to load your calendar data. Please try refreshing the page.");
+        // Initialize with empty data on error
+        const defaultCalendar = {
+            id: 1,
+            name: 'Default Calendar',
+            events: [],
+            active: true
+        };
+        setCalendars([defaultCalendar]);
+        setActiveCalendarId(defaultCalendar.id);
+        setCalendarEvents([]);
+        setBlockedWebsiteLists([{
+            id: 1,
+            name: 'Default List',
+            websites: []
+        }]);
+      } finally {
+        setIsLoading(false);
+      }
     };
     
     loadData();
@@ -323,8 +330,8 @@ const WeeklyScheduler = () => {
         const calendarApi = selectInfo.view.calendar;
         calendarApi.unselect();
         
-        const eventColor = getRandomEventColor(eventColors);
-        const colorIndex = eventColors.findIndex(color => 
+        const eventColor = colorUtils.getRandomEventColor(colorUtils.eventColors);
+        const colorIndex = colorUtils.eventColors.findIndex(color => 
             color.backgroundColor === eventColor.backgroundColor);
         
         // Tạo ID số cho event mới
@@ -361,6 +368,7 @@ const WeeklyScheduler = () => {
         
         // Thêm vào lịch sử
         addToHistory(updatedEvents);
+        setHasUnsavedChanges(true);
     }
   };
 
@@ -393,6 +401,7 @@ const WeeklyScheduler = () => {
       
       return updatedEvents;
     });
+    setHasUnsavedChanges(true);
   };
 
   // Xóa sự kiện
@@ -425,6 +434,7 @@ const WeeklyScheduler = () => {
         // Đóng modal và xóa sự kiện đã chọn
         setShowModal(false);
         setSelectedEvent(null);
+        setHasUnsavedChanges(true);
       } catch (error) {
         console.error("Error deleting event:", error);
       }
@@ -456,126 +466,126 @@ const WeeklyScheduler = () => {
   // Save events to server
   const saveEvents = async () => {
     const userID = localStorage.getItem('userID');
-
     if (!userID) {
-        console.error("No user ID found");
-        return;
+      console.error("No user ID found");
+      alert("Error: No user ID found. Cannot save.");
+      return false;
     }
-
     try {
-        // Ensure calendars data is properly structured
-        const calendarsToSave = calendars.map(calendar => {
-            const events = calendarEventsMap[calendar.id] || [];
-            
-            // Đảm bảo trạng thái active được thiết lập đúng
-            const isActive = calendar.id === activeCalendarId;
+      // Ensure calendars data is properly structured
+      const calendarsToSave = calendars.map(calendar => {
+        const events = calendarEventsMap[calendar.id] || [];
+        
+        // Đảm bảo trạng thái active được thiết lập đúng
+        const isActive = calendar.id === activeCalendarId;
+        
+        return {
+          id: Number(calendar.id),
+          name: calendar.name,
+          events: events.map(event => {
+            // Lấy mô tả từ cả hai nguồn có thể
+            const description = event.extendedProps?.description || event.description || '';
             
             return {
-                id: Number(calendar.id),
-                name: calendar.name,
-                events: events.map(event => {
-                    // Lấy mô tả từ cả hai nguồn có thể
-                    const description = event.extendedProps?.description || event.description || '';
-                    
-                    
-                    return {
-                        id: Number(event.id),
-                        title: event.title,
-                        start: event.start,
-                        end: event.end,
-                        backgroundColor: event.backgroundColor,
-                        borderColor: event.borderColor,
-                        textColor: event.textColor,
-                        description: description, // Thêm description ở cấp cao nhất
-                        extendedProps: {
-                            description: description,
-                            colorIndex: Number(event.extendedProps?.colorIndex || 0),
-                            focusMode: Boolean(event.extendedProps?.focusMode),
-                            blocklistID: event.extendedProps?.blocklistID ? Number(event.extendedProps.blocklistID) : null
-                        }
-                    };
-                }),
-                active: isActive // Sử dụng giá trị đã tính toán
+              id: Number(event.id),
+              title: event.title,
+              start: event.start,
+              end: event.end,
+              backgroundColor: event.backgroundColor,
+              borderColor: event.borderColor,
+              textColor: event.textColor,
+              description: description, // Thêm description ở cấp cao nhất
+              extendedProps: {
+                description: description,
+                colorIndex: Number(event.extendedProps?.colorIndex || 0),
+                focusMode: Boolean(event.extendedProps?.focusMode),
+                blocklistID: event.extendedProps?.blocklistID ? Number(event.extendedProps.blocklistID) : null
+              }
             };
-        });
+          }),
+          active: isActive // Sử dụng giá trị đã tính toán
+        };
+      });
 
-        // Ensure blocklist data is properly structured
-        const blockedWebsitesToSave = blockedWebsiteLists.map(list => {
-            // Đảm bảo mỗi list có id dạng số và websites là mảng
-            const id = typeof list.id === 'number' ? list.id : Number(list.id);
-            const name = String(list.name || '');
-            
-            // Đảm bảo websites là mảng và có cấu trúc đúng
-            let websites = [];
-            if (Array.isArray(list.websites)) {
-                websites = list.websites.map(site => {
-                    if (typeof site === 'string') {
-                        return { 
-                            url: site,
-                            icon: null
-                        };
-                    } else if (site && typeof site === 'object') {
-                        return {
-                            url: String(site.url || ''),
-                            icon: site.icon || null
-                        };
-                    }
-                    return null;
-                }).filter(site => site && site.url); // Lọc bỏ các site không hợp lệ
+      // Ensure blocklist data is properly structured
+      const blockedWebsitesToSave = blockedWebsiteLists.map(list => {
+        // Đảm bảo mỗi list có id dạng số và websites là mảng
+        const id = typeof list.id === 'number' ? list.id : Number(list.id);
+        const name = String(list.name || '');
+        
+        // Đảm bảo websites là mảng và có cấu trúc đúng
+        let websites = [];
+        if (Array.isArray(list.websites)) {
+          websites = list.websites.map(site => {
+            if (typeof site === 'string') {
+              return { 
+                url: site,
+                icon: null
+              };
+            } else if (site && typeof site === 'object') {
+              return {
+                url: String(site.url || ''),
+                icon: site.icon || null
+              };
             }
-            
-            return { id, name, websites };
-        });
-
-        console.log("Saving data to server...");
-
-        const {eventsResponse, blocklistResponse} = await saveUserData(
-            userID,
-            calendarsToSave,
-            blockedWebsitesToSave
-        );
+            return null;
+          }).filter(site => site && site.url); // Lọc bỏ các site không hợp lệ
+        }
         
-        if (!eventsResponse || !blocklistResponse) {
-            throw new Error("Failed to get response from server");
-        }
+        return { id, name, websites };
+      });
 
-        const blocklistData = await blocklistResponse.json();
-        const eventsData = await eventsResponse.json();
+      console.log("Saving data to server...");
+
+      const { eventsResponse, blocklistResponse } = await saveUserData(
+        userID,
+        calendarsToSave,
+        blockedWebsitesToSave
+      );
+      
+      if (!eventsResponse || !blocklistResponse) {
+        throw new Error("Failed to get response from server");
+      }
+
+      const blocklistData = await blocklistResponse.json();
+      const eventsData = await eventsResponse.json();
+      
+      if (!eventsResponse.ok) {
+        throw new Error(eventsData.error || "Failed to save events");
+      }
+
+      if (!blocklistResponse.ok) {
+        throw new Error(blocklistData.error || "Failed to save blocked websites");
+      }
+
+      alert("Events & Blocklist updated successfully! 🎉");
+      console.log("Saved Events:", eventsData);
+      console.log("Updated Blocklist:", blocklistData);
+      
+      // Cập nhật dữ liệu blocklist từ server nếu có
+      if (blocklistData && blocklistData.lists && Array.isArray(blocklistData.lists)) {
+        const processedLists = blocklistData.lists.map(list => ({
+          ...list,
+          id: Number(list.id),
+          websites: Array.isArray(list.websites) ? list.websites.map(site => {
+            if (typeof site === 'string') {
+              return { url: site, icon: null };
+            }
+            return {
+              url: site.url,
+              icon: site.icon || null
+            };
+          }) : []
+        }));
         
-        if (!eventsResponse.ok) {
-            throw new Error(eventsData.error || "Failed to save events");
-        }
-
-        if (!blocklistResponse.ok) {
-            throw new Error(blocklistData.error || "Failed to save blocked websites");
-        }
-
-        alert("Events & Blocklist updated successfully! 🎉");
-        console.log("Saved Events:", eventsData);
-        console.log("Updated Blocklist:", blocklistData);
-        
-        // Cập nhật dữ liệu blocklist từ server nếu có
-        if (blocklistData && blocklistData.lists && Array.isArray(blocklistData.lists)) {
-            // Đảm bảo mỗi list có id dạng số và websites là mảng
-            const processedLists = blocklistData.lists.map(list => ({
-                ...list,
-                id: Number(list.id),
-                websites: Array.isArray(list.websites) ? list.websites.map(site => {
-                    if (typeof site === 'string') {
-                        return { url: site, icon: null };
-                    }
-                    return {
-                        url: site.url,
-                        icon: site.icon || null
-                    };
-                }) : []
-            }));
-            
-            setBlockedWebsiteLists(processedLists);
-        }
+        setBlockedWebsiteLists(processedLists);
+      }
+      setHasUnsavedChanges(false);
+      return true;
     } catch (error) {
-        console.error("Error saving events:", error);
-        alert(`Error: ${error.message}`);
+      console.error("Error saving events:", error);
+      alert(`Error saving data: ${error.message}`);
+      return false;
     }
   };
 
@@ -620,6 +630,7 @@ const WeeklyScheduler = () => {
 
         return updatedLists;
     });
+    setHasUnsavedChanges(true);
   };
 
   const updateListName = (listId, newName) => {
@@ -628,6 +639,7 @@ const WeeklyScheduler = () => {
         list.id === listId ? { ...list, name: newName } : list
       )
     );
+    setHasUnsavedChanges(true);
   };
 
   const removeBlockedWebsiteList = (listId) => {
@@ -638,6 +650,7 @@ const WeeklyScheduler = () => {
       setActiveList(null);
       setShowListModal(false);
     }
+    setHasUnsavedChanges(true);
   };
 
   const addBlockedWebsite = (url) => {
@@ -671,6 +684,7 @@ const WeeklyScheduler = () => {
         });
       });
     }
+    setHasUnsavedChanges(true);
   };
 
   const removeBlockedWebsite = (url) => {
@@ -693,6 +707,7 @@ const WeeklyScheduler = () => {
         });
       });
     }
+    setHasUnsavedChanges(true);
   };
   
   const handleListClick = (listId) => {
@@ -700,15 +715,60 @@ const WeeklyScheduler = () => {
     setShowListModal(true);
   };
 
-  // Thêm hàm handleLogout
-  const handleLogout = () => {
-    // Xóa token và thông tin người dùng từ localStorage
-    localStorage.removeItem('token');
-    localStorage.removeItem('userID');
-    
-    // Chuyển hướng người dùng đến trang đăng nhập
-    navigate('/login');
+  // Handle Logout
+  const handleLogout = async () => {
+    if (isLoggingOut) {
+      return;
+    }
+    setIsLoggingOut(true);
+
+    if (hasUnsavedChanges) {
+      if (window.confirm("You have unsaved changes. Save them before logging out?")) {
+        const saveSuccessful = await saveEvents();
+        if (saveSuccessful) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('userID');
+          localStorage.removeItem('loginTime');
+          navigate('/login');
+          setIsLoggingOut(false);
+        } else {
+          alert("Failed to save changes. Please try again. You have not been logged out.");
+          setIsLoggingOut(false);
+          return;
+        }
+      } else {
+        if (window.confirm("Are you sure you want to log out without saving your changes?")) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('userID');
+          localStorage.removeItem('loginTime');
+          navigate('/login');
+          setIsLoggingOut(false);
+        } else {
+          setIsLoggingOut(false);
+          return;
+        }
+      }
+    } else {
+      localStorage.removeItem('token');
+      localStorage.removeItem('userID');
+      localStorage.removeItem('loginTime');
+      navigate('/login');
+      setIsLoggingOut(false);
+    }
   };
+
+  useEffect(() => {
+    const handleBeforeUnloadEvent = (event) => {
+      if (hasUnsavedChanges) {
+        event.preventDefault(); // Standard for most browsers
+        event.returnValue = ''; // Required for some browsers (e.g., Chrome)
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnloadEvent);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnloadEvent);
+    };
+  }, [hasUnsavedChanges]);
 
   if (isLoading) {
     return (
@@ -763,7 +823,7 @@ const WeeklyScheduler = () => {
           exportEvents={exportEvents}
           saveEvents={saveEvents}
           blockedWebsiteLists={blockedWebsiteLists}
-          handleLogout={handleLogout}
+          onLogout={handleLogout}
         />
       </div>
       
@@ -775,11 +835,12 @@ const WeeklyScheduler = () => {
             setCalendarEventsMap={setCalendarEventsMap}
             activeCalendarId={activeCalendarId}
             setSelectedEvent={setSelectedEvent}
-            eventColors={eventColors}
+            eventColors={colorUtils.eventColors}
             deleteEvent={deleteEvent}
             setShowModal={setShowModal}
             blockedWebsiteLists={blockedWebsiteLists}
             toggleEventFocusMode={toggleEventFocusMode}
+            setHasUnsavedChanges={setHasUnsavedChanges}
           />
         </>
       )}

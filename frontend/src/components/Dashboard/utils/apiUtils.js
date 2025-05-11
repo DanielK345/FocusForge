@@ -197,3 +197,59 @@ export async function saveUserData(userID, calendars, blockedWebsites) {
         throw error;
     }
 }
+
+export const apiInterceptor = async (url, options = {}) => {
+  const token = localStorage.getItem("token");
+  
+  if (token) {
+    // Thêm token vào header nếu có
+    options.headers = {
+      ...options.headers,
+      "Authorization": `Bearer ${token}`
+    };
+  }
+  
+  try {
+    const response = await fetch(url, options);
+    
+    // Kiểm tra lỗi phiên
+    if (response.status === 401) {
+      const data = await response.json();
+      
+      // Token hết hạn hoặc phiên không hợp lệ
+      if (data.error && (data.error.includes("token") || data.error.includes("session"))) {
+        console.error("Session expired or invalid:", data.error);
+        
+        // Xóa thông tin đăng nhập
+        localStorage.removeItem("token");
+        localStorage.removeItem("userID");
+        localStorage.removeItem("sessionId");
+        localStorage.removeItem("activeSessions");
+        localStorage.removeItem("loginTime");
+        
+        // Chuyển hướng đến trang đăng nhập
+        alert("Your session has expired. Please log in again.");
+        window.location.href = "/login";
+        
+        // Throw error để dừng xử lý tiếp theo
+        throw new Error("Session expired");
+      }
+    }
+    
+    return response;
+  } catch (error) {
+    console.error("API call error:", error);
+    throw error;
+  }
+};
+
+export const fetchUserProfile = async (userID) => {
+  try {
+    const response = await apiInterceptor(`${API.baseURL}/dashboard/user/${userID}`);
+    return await response.json();
+  } catch (error) {
+    // Xử lý lỗi
+    console.error("Error fetching user data:", error);
+    return null;
+  }
+};

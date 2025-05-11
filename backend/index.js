@@ -10,14 +10,25 @@ const calendarRoutes = require('./routes/calendarRoutes');
 const blockListRoutes = require('./routes/blockListRoutes');
 
 const app = express();
-// Configure CORS to allow requests from 'http://localhost:3000'
-const corsOptions = {
-  origin: ['https://focus-forge-welcome.netlify.app', 'chrome-extension://*'], // Specify the allowed origin(s) here
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Optional: Specify allowed HTTP methods
-  credentials: true, // Optional: Set to true if you need to send cookies
-};
+const PORT = process.env.PORT || 5000;
+const NODE_ENV = process.env.NODE_ENV;
+const FRONTEND_URL = process.env.FRONTEND_URL;
+const EXTENSION_URL = 'chrome-extension://*';
 
-app.use(cors(corsOptions)); // Apply CORS configuration to all routes
+// CORS configuration based on environment
+if (NODE_ENV === 'development') {
+  console.log('Running in DEVELOPMENT mode');
+} else if (NODE_ENV === 'production'){
+  console.log('Running in PRODUCTION mode');
+}
+
+console.log(FRONTEND_URL);
+console.log(EXTENSION_URL);
+
+app.use(cors({ origin: ['https://focus-forge-frontend.vercel.app', 'http://localhost:3000', 'chrome-extension://*'],
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Optional: Specify allowed HTTP methods
+  credentials: true
+ }));
 
 
 // app.use(cors({
@@ -25,7 +36,7 @@ app.use(cors(corsOptions)); // Apply CORS configuration to all routes
 //     ? ['https://focusforge.netlify.app', 'chrome-extension://*']
 //     : ['http://localhost:3000', 'chrome-extension://*'],
 //   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//   allowedHeaders: ['Content-Type', 'Authorization']
+//   credentials: true
 // }));
 app.use(express.json());
 
@@ -34,6 +45,8 @@ app.use(express.json());
 connectDB();
 
 // Routes
+app.use('/auth', authRoutes);
+app.use('/dashboard', [calendarRoutes, blockListRoutes]);
 app.use('/auth', authRoutes);
 app.use('/dashboard', [calendarRoutes, blockListRoutes]);
 
@@ -45,6 +58,8 @@ app.get('/', (req, res) => {
     endpoints: {
       auth: '/auth',
       calendar: '/dashboard',
+      auth: '/auth',
+      calendar: '/dashboard',
     }
   });
 });
@@ -52,7 +67,13 @@ app.get('/', (req, res) => {
 // Serve static assets in production
 // if (process.env.NODE_ENV === 'production') {
 //     app.use(express.static(path.join(__dirname, '../frontend/build')));
+// if (process.env.NODE_ENV === 'production') {
+//     app.use(express.static(path.join(__dirname, '../frontend/build')));
     
+//     app.get('*', (req, res) => {
+//       res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+//     });
+//   }
 //     app.get('*', (req, res) => {
 //       res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
 //     });
@@ -69,6 +90,4 @@ app.use((err, req, res, next) => {
 });
 
 const server = http.createServer(app);
-
-const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`Server running on port: http://localhost:${PORT}`));

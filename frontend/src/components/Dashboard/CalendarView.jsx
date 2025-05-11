@@ -13,7 +13,7 @@ const CalendarView = ({
                           exportEvents,
                           saveEvents,
                           blockedWebsiteLists,
-                          handleLogout
+                          onLogout
                       }) => {
 
     return (
@@ -137,7 +137,7 @@ const CalendarView = ({
                 </button>
 
                 <button
-                    onClick={handleLogout}
+                    onClick={onLogout}
                     className="flex items-center gap-1 bg-red-600 text-white rounded px-3 py-1 text-sm ml-auto"
                 >
                     Logout

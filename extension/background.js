@@ -39,7 +39,7 @@ function initialize() {
 // Lấy thông tin xác thực từ trang web Focus Forge
 function fetchAuthFromFocusForge() {
   // Truy cập vào localStorage của trang web Focus Forge
-  chrome.tabs.query({url: 'http://localhost:3000/*'}, function(tabs) {
+  chrome.tabs.query({url: 'https://focus-forge-frontend.vercel.app/*'}, function(tabs) {
     if (tabs.length === 0) {
       console.log('Không tìm thấy trang Focus Forge đang mở');
       return;
@@ -305,7 +305,7 @@ async function fetchDataFromServer(userId, token) {
     console.log('Đang lấy dữ liệu từ server...');
     
     // Gọi API để lấy dữ liệu lịch
-    const calendarResponse = await fetch(`http://localhost:5000/api/dashboard/events/get?userID=${userId}`, {
+    const calendarResponse = await fetch(`https://focusforge-backend-6976505155ee.herokuapp.com/dashboard/events/get?userID=${userId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -321,7 +321,7 @@ async function fetchDataFromServer(userId, token) {
     console.log('Dữ liệu lịch:', calendarData);
     
     // Gọi API để lấy dữ liệu danh sách chặn
-    const blocklistResponse = await fetch(`http://localhost:5000/api/dashboard/blocklist/get?userID=${userId}`, {
+    const blocklistResponse = await fetch(`https://focusforge-backend-6976505155ee.herokuapp.com/dashboard/blocklist/get?userID=${userId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

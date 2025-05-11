@@ -10,7 +10,8 @@ const EventModal = ({
   eventColors,
   deleteEvent,
   setShowModal,
-  blockedWebsiteLists
+  blockedWebsiteLists,
+  setHasUnsavedChanges
 }) => {
   // Đảm bảo mô tả được hiển thị đúng
   const description = selectedEvent.extendedProps?.description || selectedEvent.description || '';
@@ -25,7 +26,10 @@ const EventModal = ({
         <input
           type="text"
           value={selectedEvent.title}
-          onChange={(e) => setSelectedEvent(prev => ({ ...prev, title: e.target.value }))}
+          onChange={(e) => {
+            setSelectedEvent(prev => ({ ...prev, title: e.target.value }));
+            setHasUnsavedChanges(true);
+          }}
           className="w-full border rounded p-2 text-sm mb-3"
         />
 
@@ -42,6 +46,7 @@ const EventModal = ({
                 description: newDescription
               }
             }));
+            setHasUnsavedChanges(true);
           }}
           className="w-full border rounded p-2 text-sm mb-4"
           rows="3"
@@ -54,13 +59,16 @@ const EventModal = ({
               key={index}
               className={`w-8 h-8 rounded-full border-2 ${selectedEvent.colorIndex === index ? 'ring-2 ring-blue-500' : ''}`}
               style={{ backgroundColor: color.backgroundColor, borderColor: color.borderColor }}
-              onClick={() => setSelectedEvent(prev => ({
-                ...prev,
-                backgroundColor: color.backgroundColor,
-                borderColor: color.borderColor,
-                textColor: color.textColor,
-                colorIndex: index
-              }))}
+              onClick={() => {
+                setSelectedEvent(prev => ({
+                  ...prev,
+                  backgroundColor: color.backgroundColor,
+                  borderColor: color.borderColor,
+                  textColor: color.textColor,
+                  colorIndex: index
+                }));
+                setHasUnsavedChanges(true);
+              }}
             ></button>
           ))}
         </div>
@@ -78,6 +86,7 @@ const EventModal = ({
                 focusMode: newFocusMode,
                 blocklistID: newFocusMode ? (prev.blocklistID || null) : null
               }));
+              setHasUnsavedChanges(true);
             }}
             className="mr-2"
           />
@@ -100,6 +109,7 @@ const EventModal = ({
                     ...prev,
                     blocklistID: newBlocklistID ? String(newBlocklistID) : null
                   }));
+                  setHasUnsavedChanges(true);
                 }}
               >
                 <option value="">-- Choose a Blocklist --</option>
